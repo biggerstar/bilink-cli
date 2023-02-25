@@ -1,0 +1,15 @@
+{
+  "name": "bilink-cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "release": "npm publish && git commit -am $npm_package_version && git tag $npm_package_version && git push --tags "
+  },
+  "author": "",
+  "license": "ISC",
+  "bin": {
+    "bilink": "bin/bilink.js"
+  }
+}
