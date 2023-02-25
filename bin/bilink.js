@@ -122,11 +122,12 @@ const createLib = {
 
 function parseCli() {
     const packageConfig = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+    const version = packageConfig ? packageConfig.version : '1.0.0'  // 无伤大雅，不严谨懒得整
     const program = new Command();
     program
         .name('bilink')
-        .description('CLI to some JavaScript string utilities')
-        .version(packageConfig.version);
+        .description('用于创建一个新的微模块')
+        .version(version);
 
     program.command('create')
         .description('创建一个新的微模块')
