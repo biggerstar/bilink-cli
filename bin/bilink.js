@@ -120,6 +120,34 @@ const createLib = {
     }
 }
 
+function biLinkCreate(str, options) {
+    const baseModulePath = `${process.env.PWD}/src/modules/`
+    const genConfig = (obj) => {
+        const camelName = lodash.upperFirst(lodash.camelCase(obj.name))
+        return {
+            ...obj,
+            camelName: camelName,
+            modulePath: baseModulePath + camelName
+        }
+    }
+    if (options.args.length === 0) return createLib.init().then(res => {
+        // 到这边已经验证过不存在输入的模块文件夹了
+        createEvery(genConfig(res))
+    })
+    let input = options.args[0]
+    let name = input
+    let version = '1.0.0'
+    if (input.includes('@')) {
+        name = input.split('@')[0]
+        version = input.split('@')[1]
+    }
+    existModule(name)
+    createEvery(genConfig({
+        name,
+        version
+    }))
+}
+
 function parseCli() {
     const packageConfig = JSON.parse(fs.readFileSync('package.json', 'utf8'))
     const version = packageConfig ? packageConfig.version : '1.0.0'  // 无伤大雅，不严谨懒得整
@@ -127,36 +155,14 @@ function parseCli() {
     program
         .name('bilink')
         .description('用于创建一个新的微模块')
-        .version(version);
-
+        .version(version)
+        .action((str, options) => {
+            biLinkCreate(str, options)
+        })
     program.command('create')
         .description('创建一个新的微模块')
         .action((str, options) => {
-            const baseModulePath = `${process.env.PWD}/src/modules/`
-            const genConfig = (obj) => {
-                const camelName = lodash.upperFirst(lodash.camelCase(obj.name))
-                return {
-                    ...obj,
-                    camelName: camelName,
-                    modulePath: baseModulePath + camelName
-                }
-            }
-            if (options.args.length === 0) return createLib.init().then(res => {
-                // 到这边已经验证过不存在输入的模块文件夹了
-                createEvery(genConfig(res))
-            })
-            let input = options.args[0]
-            let name = input
-            let version = '1.0.0'
-            if (input.includes('@')) {
-                name = input.split('@')[0]
-                version = input.split('@')[1]
-            }
-            existModule(name)
-            createEvery(genConfig({
-                name,
-                version
-            }))
+            biLinkCreate(str, options)
         });
     program.parse();
 }
