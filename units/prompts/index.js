@@ -4,19 +4,32 @@ import existModule from "../existModule.js";
 const prompts = {
     create() {
         let isValidateDone = true
-        return inquirer['prompt']([{
-            message: '请输入要添加的模块名称: ', name: 'name', filter: (input) => {
-                if (input.length <= 0 || existModule(input)) isValidateDone = false
-                if (isValidateDone === false) input = ''
-                return input
-            }, validate: () => {
-                const validateDone = isValidateDone
-                isValidateDone = true
-                return validateDone
+        return inquirer['prompt']([
+            {
+                message: '请输入要添加的模块名称: ', name: 'name', filter: (input) => {
+                    if (input.length <= 0 || existModule(input)) isValidateDone = false
+                    if (isValidateDone === false) input = ''
+                    return input
+                }, validate: () => {
+                    const validateDone = isValidateDone
+                    isValidateDone = true
+                    return validateDone
+                },
             },
-        }, {
-            message: '请输入版本号: ', name: 'version', default: '1.0.0'
-        },])
+            {
+                message: '请输入版本号: ', name: 'version', default: '1.0.0'
+            },
+            {
+                type: 'list',
+                message: '请选择开发组件类型:',
+                name: 'moduleType',
+                choices: [
+                    'normal: 普通vue项目(打包后提供html入口独立访问)',
+                    'library: 组件库项目(打包后可被js直接导入组件使用)',
+                ],
+                filter:(input)=> input.split(':')[0].trim()
+            },
+        ])
     },
     buildAll() {
         return inquirer['prompt'](

@@ -3,10 +3,10 @@ import {Command} from 'commander'
 import fs from "fs"
 import path from "path"
 import lodash from "lodash"
-import AutoBuild from "../unitl/AutoBuild.js"
-import createEvery from "../unitl/create/index.js";
-import existModule from "../unitl/existModule.js";
-import prompts from "../unitl/prompts/index.js";
+import AutoBuild from "../units/AutoBuild.js"
+import createEvery from "../units/create/index.js";
+import existModule from "../units/existModule.js";
+import prompts from "../units/prompts/index.js";
 
 async function biLinkCreate(str, options) {
     const baseModulePath = `${process.env.PWD}/src/modules/`
@@ -18,6 +18,7 @@ async function biLinkCreate(str, options) {
     }
     if (options.args.length === 0) return await prompts.create().then(res => {
         // 到这边已经在异步函数里验证过不存在重复的模块文件夹了
+        // console.log(res);
         createEvery(genConfig(res))
     })
     let input = options.args[0]
@@ -29,7 +30,8 @@ async function biLinkCreate(str, options) {
     }
     existModule(name)
     createEvery(genConfig({
-        name, version
+        name, version,
+        moduleType:'normal'
     }))
 }
 
@@ -38,7 +40,7 @@ async function biLinkBuild(str, options) {
     if (buildAllow.length === 0) {
         const res = await prompts.buildAll()
         if (res.allow === 'custom') buildAllow = res.custom.split(/\s/).filter(name => name !== '')
-        else if (!(res.allow === 'yes')) return console.log(' ❌  Compilation terminated');
+        else if (!(res.allow === 'yes')) return console.log(' \u274C  Compilation terminated'); // ❌
     }
     await AutoBuild.build(buildAllow)
 }
@@ -49,6 +51,7 @@ async function biLinkServe(str, options, isPreview = false) {
     } else {
         await AutoBuild.serve(options.args[0], isPreview, {syncModuleConfig: true, runServe: false})  // 为了获得allModuleConfig
         const allModuleName = Object.keys(AutoBuild.allModuleConfig).map(name => name.toLowerCase())
+        if (allModuleName.length === 0) return console.log(' \u274C  Modules is empty'); // ❌
         await prompts.serveChoices(allModuleName).then(async (res) => {
             await AutoBuild.serve(res['serveName'], isPreview)
         })

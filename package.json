@@ -1,26 +1,31 @@
 {
   "name": "bilink-cli",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "description": "bilink-cli",
   "main": "index.js",
   "scripts": {
     "start": "bilink",
+    "cli": "node ./dist/bilinkCli.js",
     "create": "bilink create",
     "build": "bilink build",
     "release": "npm publish && git commit -am $npm_package_version && git tag $npm_package_version && git push --tags "
   },
   "exports": {
-    "default": "./index.js",
-    "import": "./index.js"
+    "default": "./dist/bilinkCli.js",
+    "import": "./dist/bilinkCli.js",
+    "require": "./dist/bilinkCli.umd.cjs"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "bilink",
+  "license": "GPL-3.0-or-later",
   "bin": {
-    "bilink": "bin/bilink.js"
+    "bilink": "./dist/bilinkCli.js"
   },
-  "dependencies": {},
+  "dependencies": {
+  },
   "devDependencies": {
+    "require-from-esm": "^0.0.3",
+    "@rollup/plugin-commonjs": "^24.0.1",
     "@types/node": "^18.14.1",
     "@vitejs/plugin-basic-ssl": "^1.0.1",
     "@vitejs/plugin-vue": "^4.0.0",
@@ -28,6 +33,8 @@
     "glob": "^8.1.0",
     "inquirer": "^9.1.4",
     "lodash": "^4.17.21",
-    "vite": "^4.1.4"
+    "vite": "^4.1.4",
+    "vite-plugin-build": "^0.7.1",
+    "vite-plugin-require-transform": "^1.0.9"
   }
 }

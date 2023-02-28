@@ -1,4 +1,8 @@
 export default function createViteConfigJs(res) {
+    const inputField = res.moduleType === 'normal' ? `    
+    /* 普通开发模式下，可以在input中修改打包入口 */
+    //input : path.resolve(process.cwd(),'src/modules/${res.camelName}/index.html'),` : ''
+
     return `import vue from '@vitejs/plugin-vue'
 import path from "path";
 
@@ -6,10 +10,16 @@ import path from "path";
 export default {
   name: "${res.camelName}",
   version: "${res.version}",
+  moduleType: "${res.moduleType}",
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': path.resolve(process.cwd(), './src')
+      '@': path.resolve(process.cwd(), 'src')
+    }
+  },
+  build: {
+    rollupOptions: { ${inputField}
+      external: ['vue'],   // 如果只打包单组件无需打包第三方库，则在这里将其排除不进行打包
     }
   },
   server: {

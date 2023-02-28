@@ -3,7 +3,6 @@ import path from "path";
 import glob from "glob";
 import {build, createServer, preview} from "vite"
 import deepMerge from "./deepMerge.js";
-import vue from "@vitejs/plugin-vue";
 // import basicSsl from '@vitejs/plugin-basic-ssl'
 
 const self = class AutoBuild {
@@ -37,36 +36,52 @@ const self = class AutoBuild {
                     .includes(moduleName.toLowerCase())) throw new Error(`不存在微模块: ${moduleName}`)
             })
         }
-        console.log('➕ 当前编译的模块列表: ', buildList);
+        console.log('\u27A1 当前编译的模块列表: ', buildList);
         for (let i = 0; i < buildList.length; i++) {
             const moduleInfo = self.allModuleConfig[buildList[i].toLowerCase()]
             const moduleName = moduleInfo.name || buildList[i]
-            let buildConfig = {
+            let buildConfig = {  /* 基本配置 */
                 build: {
                     emptyOutDir: true,
                     outDir: `dist/${moduleName}/${moduleInfo.version}`,
-                    rollupOptions: {
-                        external: []
-                    },
-                    lib: {
-                        entry: path.resolve(process.cwd(), `src/${self.moduleDir}/${moduleName}/main.js`),
-                        name: moduleName,
-                        formats: ['es'],/* formats 必须是数组,不然外部没开lib会报[].map not a function错误 */
-                        fileName: moduleName,
-                    }
                 }
+            }
+            if (moduleInfo.moduleType === 'normal'){  /* 普通打包模式 */
+                buildConfig  = deepMerge(buildConfig, {
+                    build:{
+                        rollupOptions: {
+                            external: [],
+                            input : path.resolve(process.cwd(),`src/${self.moduleDir}/${moduleName}/index.html`)
+                        }
+                    }
+                })
+            }
+            if (moduleInfo.moduleType === 'library'){  /* 组件库打包模式 */
+                buildConfig  = deepMerge(buildConfig, {
+                    build:{
+                        rollupOptions: {
+                            external: ['vue'],
+                        },
+                        lib: {
+                            entry: path.resolve(process.cwd(), `src/${self.moduleDir}/${moduleName}/main.js`),
+                            name: moduleName,
+                            formats: ['es'],/* formats 必须是数组,不然外部没开lib会报[].map not a function错误 */
+                            fileName: moduleName,
+                        }
+                    }
+                })
             }
             buildConfig /* 最终合并外部微模块专属的vite配置 */ = deepMerge(buildConfig, moduleInfo)
             // console.log(buildConfig);
             const sourceLog = console.log
             console.log = (log) => {  /* 拦截控制台输出内容，并在后面归还*/
-                if (log.includes('vite') && log.includes('building')) sourceLog('🆕 开始编译模块\x1B[32m', moduleName, '\x1B[0m')
+                if (log.includes('vite') && log.includes('building')) sourceLog('\u2795 开始编译模块\x1B[32m', moduleName, '\x1B[0m')
                 else sourceLog(log)
             }
             await build(buildConfig)
             console.log = sourceLog
         }
-        console.log(`✅   build completed`);
+        console.log(`\u2705 build completed`);
     }
 
     /** 对象形参不严谨，先这样吧
@@ -248,5 +263,4 @@ const self = class AutoBuild {
     }
 
 }
-
 export default self

@@ -1,5 +1,5 @@
 export default function createVueTemplate(res) {
-    return `<template>\n
+    return `<template>
   <Hello></Hello>
 </template>
 <script>
