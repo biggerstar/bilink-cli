@@ -1,7 +1,11 @@
 import fs from 'fs';
 import path from "path";
 import glob from "glob";
-import {build, createServer, preview} from "vite"
+import requireCjs from "./require.js";
+import mkdirRecursive from "./mkdirRecursive.js";
+import moveIndexHtmlToRootPlugin from './plugins/moveIndexHtmlToRoot.js'
+
+const {build, createServer, preview} = requireCjs("vite")
 import deepMerge from "./deepMerge.js";
 // import basicSsl from '@vitejs/plugin-basic-ssl'
 
@@ -33,55 +37,74 @@ const self = class AutoBuild {
         else {
             buildList.forEach(moduleName => {
                 if (!allModuleNameList.map(name => name.toLowerCase())
-                    .includes(moduleName.toLowerCase())) throw new Error(`不存在微模块: ${moduleName}`)
+                    .includes(moduleName.toLowerCase())) throw `不存在微模块: ${moduleName},如果您定义了，请检查vite.js配置文件是否存在` // 用户自定义编译的模块验证
             })
         }
         console.log('\u27A1 当前编译的模块列表: ', buildList);
         for (let i = 0; i < buildList.length; i++) {
             const moduleInfo = self.allModuleConfig[buildList[i].toLowerCase()]
+            if (!moduleInfo) throw `未找到微模块: ${buildList[i]}对应的配置信息`
             const moduleName = moduleInfo.name || buildList[i]
+            /* 开始生成初始的vite配置 */
             let buildConfig = {  /* 基本配置 */
+                mode: 'production',
+                plugins: [],
                 build: {
                     emptyOutDir: true,
                     outDir: `dist/${moduleName}/${moduleInfo.version}`,
                 }
             }
-            if (moduleInfo.moduleType === 'normal'){  /* 普通打包模式 */
-                buildConfig  = deepMerge(buildConfig, {
-                    build:{
+            if (moduleInfo.moduleType === 'normal') {  /* 普通打包模式 */
+                // 有指定rollupOptions.input lib会被忽略
+                buildConfig = deepMerge(buildConfig, {
+                    build: {
                         rollupOptions: {
                             external: [],
-                            input : path.resolve(process.cwd(),`src/${self.moduleDir}/${moduleName}/index.html`)
+                            input: path.resolve(process.cwd(), `src/${self.moduleDir}/${moduleName}/index.html`)
                         }
+                    },
+                    lib: {
+                        entry: false
                     }
                 })
             }
-            if (moduleInfo.moduleType === 'library'){  /* 组件库打包模式 */
-                buildConfig  = deepMerge(buildConfig, {
-                    build:{
+            if (moduleInfo.moduleType === 'library') {  /* 组件库打包模式 */
+                buildConfig = deepMerge(buildConfig, {
+                    build: {
                         rollupOptions: {
+                            input: false,
                             external: ['vue'],
                         },
                         lib: {
-                            entry: path.resolve(process.cwd(), `src/${self.moduleDir}/${moduleName}/main.js`),
+                            entry: path.resolve(process.cwd(), `src/${self.moduleDir}/${moduleName}/index.js`),
                             name: moduleName,
                             formats: ['es'],/* formats 必须是数组,不然外部没开lib会报[].map not a function错误 */
                             fileName: moduleName,
                         }
                     }
                 })
+                // console.log(buildConfig);
             }
             buildConfig /* 最终合并外部微模块专属的vite配置 */ = deepMerge(buildConfig, moduleInfo)
+
+            /* 下面是拿到终配置的逻辑  */
+            if (moduleInfo.moduleType === 'normal') {
+                //  添加处理normal下html位置的插件
+                if (Array.isArray(buildConfig.plugins)) buildConfig.plugins.push(moveIndexHtmlToRootPlugin(buildConfig))
+            }
+
+            // console.log(buildConfig.plugins);
             // console.log(buildConfig);
             const sourceLog = console.log
-            console.log = (log) => {  /* 拦截控制台输出内容，并在后面归还*/
-                if (log.includes('vite') && log.includes('building')) sourceLog('\u2795 开始编译模块\x1B[32m', moduleName, '\x1B[0m')
-                else sourceLog(log)
+            console.log = (...args) => {  /* 拦截控制台输出内容，并在后面归还*/  /* u2795 */
+                const log = args.length > 0 ? args[0] : undefined
+                if (typeof log === 'string' && log.includes('vite') && log.includes('building')) sourceLog('\u2795  开始编译模块\x1B[32m', moduleName, '\x1B[0m')
+                else sourceLog(...args)
             }
             await build(buildConfig)
             console.log = sourceLog
         }
-        console.log(`\u2705 build completed`);
+        console.log(`\u2705   build completed`); /* u2705*/
     }
 
     /** 对象形参不严谨，先这样吧
@@ -97,7 +120,7 @@ const self = class AutoBuild {
         if (!moduleName) throw new Error('未找到指定模块')
         const baseSrc = path.resolve(process.cwd(), `src/${self.moduleDir}/${moduleName}/`)
         let customViteConfig = self.allModuleConfig[moduleName]
-        if (!customViteConfig) throw new Error('未找到' + moduleName + '指定的vite配置信息')
+        if (!customViteConfig) throw '未找到模块' + moduleName + '指定的vite配置信息'
 
         let viteConfig = deepMerge({
             server: {
@@ -131,21 +154,23 @@ const self = class AutoBuild {
 
     /** 获取所有的模块配置信息，包括:模块路径, build.json等 */
     static async genModuleConfig() {  // 后面如果对取路径过程的变量不敏感，可以通过glob优化下
-        const baseModulePath = path.join(process.env.PWD, `/src/${self.moduleDir}`)
-        if (fs.existsSync(baseModulePath)) {
-            const moduleDirs = fs.readdirSync(baseModulePath)  // component下的所有模块
-            for (let i = 0; i < moduleDirs.length; i++) {
-                const moduleName = moduleDirs[i]
-                const modulePath = `${baseModulePath}/${moduleName}`  // 模块真实的根路径
-                if (fs.existsSync(modulePath)) {    // 是否存在该模块文件夹
-                    const moduleFiles = fs.readdirSync(modulePath)
-                    if (!moduleFiles.includes(`vite.js`)) return  // 不是一个模块直接忽略
-                    const buildFilePath = `${modulePath}/vite.js`
-                    self.allModuleConfig[moduleName.toLowerCase()] = (await import(buildFilePath)).default // 拿到各个模块的vite.config.js配置
-                }
+        const baseModulePath = path.join(process.cwd(), `/src/${self.moduleDir}`)
+        if (!fs.existsSync(baseModulePath)) mkdirRecursive(baseModulePath)
+        const moduleDirs = fs.readdirSync(baseModulePath)  // component下的所有模块
+        for (let i = 0; i < moduleDirs.length; i++) {
+            const moduleName = moduleDirs[i]
+            const modulePath = `${baseModulePath}/${moduleName}`  // 模块真实的根路径
+            if (fs.existsSync(modulePath)) {    // 是否存在该模块文件夹
+                const moduleFiles = fs.readdirSync(modulePath)
+                if (!moduleFiles.includes(`vite.js`)) continue  // 不是一个模块直接忽略
+                const buildFilePath = `${modulePath}/vite.js`
+                self.allModuleConfig[moduleName.toLowerCase()] = await (await import(buildFilePath)).default // 拿到各个模块的vite.config.js配置
             }
-            return self.allModuleConfig
-        } else throw new Error('请检查模块存放目录是否位置正确,可以通过字段moduleDir重新指定src目录下任意文件夹为存放模块的主文件夹')
+        }
+        return self.allModuleConfig
+
+        // else throw '请检查模块存放目录src/modules是否位置正确,' +
+        //     '可以通过字段AutoBuild.moduleDir重新指定src目录下任意文件夹为存放模块的主文件夹'
     }
 
     /** 生成能匹配指定后缀的正则表达式
@@ -158,7 +183,7 @@ const self = class AutoBuild {
 
     /** 通过文件路径解析当前微应用模块名 */
     static parseModuleName(filePath) {
-        const reg = new RegExp(`src\/${self.moduleDir}\/(.+)\/.+`)
+        const reg = new RegExp(`src\/${self.moduleDir}\/([^\/]+)\/.+`)
         const componentMatch = filePath.toString().match(reg)
         if (Array.isArray(componentMatch)) { /* 对组件进行分包 */
             return componentMatch[1]
@@ -187,14 +212,14 @@ const self = class AutoBuild {
     /**  创建多入口打包 */
     static createBuildInput() {
         const pageEntry = {};
-        const allEntry = glob.sync(`${process.env.PWD}/src/${self.moduleDir}/**/index.html`);
+        const allEntry = glob.sync(`${process.cwd()}/src/${self.moduleDir}/**/index.html`);
         allEntry.forEach((entry) => {
             const pathArr = entry.split("/");
             const name = pathArr[pathArr.length - 2];
             /* 如果存在允许导出列表，则将其导出 */
             if (self.allowBuildList.includes(name.toLowerCase())
                 || self.allowBuildList.length === 0) {
-                pageEntry[name] = `${process.env.PWD}/src/${self.moduleDir}/${name}/index.html`
+                pageEntry[name] = `${process.cwd()}/src/${self.moduleDir}/${name}/index.html`
             }
         })
         return pageEntry

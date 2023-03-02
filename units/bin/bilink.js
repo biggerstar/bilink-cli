@@ -3,13 +3,13 @@ import {Command} from 'commander'
 import fs from "fs"
 import path from "path"
 import lodash from "lodash"
-import AutoBuild from "../units/AutoBuild.js"
-import createEvery from "../units/create/index.js";
-import existModule from "../units/existModule.js";
-import prompts from "../units/prompts/index.js";
+import AutoBuild from "../AutoBuild.js"
+import createEvery from "../create/index.js";
+import existModule from "../existModule.js";
+import prompts from "../prompts/index.js";
 
 async function biLinkCreate(str, options) {
-    const baseModulePath = `${process.env.PWD}/src/modules/`
+    const baseModulePath = `${process.cwd()}/src/modules/`
     const genConfig = (obj) => {
         const camelName = lodash.upperFirst(lodash.camelCase(obj.name))
         return {
@@ -37,9 +37,13 @@ async function biLinkCreate(str, options) {
 
 async function biLinkBuild(str, options) {
     let buildAllow = options.args
-    if (buildAllow.length === 0) {
-        const res = await prompts.buildAll()
-        if (res.allow === 'custom') buildAllow = res.custom.split(/\s/).filter(name => name !== '')
+    if (buildAllow.length === 0) { /* args中未传入编译模块名 */
+        await AutoBuild.genModuleConfig()
+        const allModuleName = Object.keys(AutoBuild.allModuleConfig)
+        if (allModuleName.length === 0) return console.log(' \u274C  Modules is empty');
+        const res = await prompts.buildAll(allModuleName)
+        if (res.allow === 'select') buildAllow = res.select
+        else if (res.allow === 'handle') buildAllow = res.handle.split(/\s/).filter(name => name !== '')
         else if (!(res.allow === 'yes')) return console.log(' \u274C  Compilation terminated'); // ❌
     }
     await AutoBuild.build(buildAllow)

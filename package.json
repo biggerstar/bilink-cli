@@ -1,40 +1,41 @@
 {
   "name": "bilink-cli",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "type": "module",
   "description": "bilink-cli",
   "main": "index.js",
   "scripts": {
     "start": "bilink",
-    "cli": "node ./dist/bilinkCli.js",
+    "cli": "node ./bin/bilink.js",
     "create": "bilink create",
     "build": "bilink build",
-    "release": "npm publish && git commit -am $npm_package_version && git tag $npm_package_version && git push --tags "
+    "vite:build": "vite build && node units/addBinHeader.js",
+    "release": "npm publish && git commit -am $npm_package_version && git tag $npm_package_version && git push --tags ",
+    "release:git": "git commit -am $npm_package_version && git tag $npm_package_version && git push --tags ",
+    "release:npm": "npm publish"
   },
   "exports": {
-    "default": "./dist/bilinkCli.js",
-    "import": "./dist/bilinkCli.js",
-    "require": "./dist/bilinkCli.umd.cjs"
+    "default": "./bin/bilink.js",
+    "import": "./bin/bilink.js"
   },
   "author": "bilink",
   "license": "GPL-3.0-or-later",
   "bin": {
-    "bilink": "./dist/bilinkCli.js"
+    "bilink": "./bin/bilink.js"
   },
   "dependencies": {
+    "commander": "^10.0.0",
+    "fs-extra": "^11.1.0",
+    "glob": "^8.1.0",
+    "inquirer": "^9.1.4",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "require-from-esm": "^0.0.3",
-    "@rollup/plugin-commonjs": "^24.0.1",
     "@types/node": "^18.14.1",
     "@vitejs/plugin-basic-ssl": "^1.0.1",
     "@vitejs/plugin-vue": "^4.0.0",
-    "commander": "^10.0.0",
-    "glob": "^8.1.0",
-    "inquirer": "^9.1.4",
-    "lodash": "^4.17.21",
+    "terser": "^5.16.5",
     "vite": "^4.1.4",
-    "vite-plugin-build": "^0.7.1",
-    "vite-plugin-require-transform": "^1.0.9"
+    "vue": "^3.2.47"
   }
 }
