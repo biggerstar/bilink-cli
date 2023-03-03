@@ -3,7 +3,7 @@ import {Command} from 'commander'
 import fs from "fs"
 import path from "path"
 import lodash from "lodash"
-import AutoBuild from "../AutoBuild.js"
+import BiLink from "../BiLink.js"
 import createEvery from "../create/index.js";
 import existModule from "../existModule.js";
 import prompts from "../prompts/index.js";
@@ -31,33 +31,33 @@ async function biLinkCreate(str, options) {
     existModule(name)
     createEvery(genConfig({
         name, version,
-        moduleType:'normal'
+        moduleType: 'normal'
     }))
 }
 
 async function biLinkBuild(str, options) {
     let buildAllow = options.args
     if (buildAllow.length === 0) { /* args中未传入编译模块名 */
-        await AutoBuild.genModuleConfig()
-        const allModuleName = Object.keys(AutoBuild.allModuleConfig)
+        await BiLink.genModuleConfig()
+        const allModuleName = Object.keys(BiLink.allModuleConfig)
         if (allModuleName.length === 0) return console.log(' \u274C  Modules is empty');
         const res = await prompts.buildAll(allModuleName)
         if (res.allow === 'select') buildAllow = res.select
         else if (res.allow === 'handle') buildAllow = res.handle.split(/\s/).filter(name => name !== '')
         else if (!(res.allow === 'yes')) return console.log(' \u274C  Compilation terminated'); // ❌
     }
-    await AutoBuild.build(buildAllow)
+    await BiLink.build(buildAllow)
 }
 
 async function biLinkServe(str, options, isPreview = false) {
     if (options.args.length > 0) {
-        await AutoBuild.serve(options.args[0], isPreview)
+        await BiLink.serve(options.args[0], isPreview)
     } else {
-        await AutoBuild.serve(options.args[0], isPreview, {syncModuleConfig: true, runServe: false})  // 为了获得allModuleConfig
-        const allModuleName = Object.keys(AutoBuild.allModuleConfig).map(name => name.toLowerCase())
+        await BiLink.serve(options.args[0], isPreview, {syncModuleConfig: true, runServe: false})  // 为了获得allModuleConfig
+        const allModuleName = Object.keys(BiLink.allModuleConfig).map(name => name.toLowerCase())
         if (allModuleName.length === 0) return console.log(' \u274C  Modules is empty'); // ❌
         await prompts.serveChoices(allModuleName).then(async (res) => {
-            await AutoBuild.serve(res['serveName'], isPreview)
+            await BiLink.serve(res['serveName'], isPreview)
         })
     }
 }
@@ -69,6 +69,7 @@ async function biLinkPreview(str, options) {
 function parseCli() {
     const packageConfig = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf8'))
     const version = packageConfig ? packageConfig.version : '1.0.0'  // 无伤大雅，不严谨懒得整
+    BiLink.version = version
     const program = new Command();
     program
         .name('bilink')

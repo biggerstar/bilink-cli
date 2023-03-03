@@ -4,12 +4,14 @@ import glob from "glob";
 import requireCjs from "./require.js";
 import mkdirRecursive from "./mkdirRecursive.js";
 import moveIndexHtmlToRootPlugin from './plugins/moveIndexHtmlToRoot.js'
+import preact from "@preact/preset-vite";
 
 const {build, createServer, preview} = requireCjs("vite")
 import deepMerge from "./deepMerge.js";
 // import basicSsl from '@vitejs/plugin-basic-ssl'
 
-const self = class AutoBuild {
+const self = class BiLink {
+    static version = '1.0.0'
     static allowBuildList = []
     static allModuleConfig = {}   // key会全部被转成小写
     static moduleDir = 'modules'
@@ -30,7 +32,7 @@ const self = class AutoBuild {
      * @param {Array} buildList 要编译的模块列表,如果传入为空或空数组则表示编译全部模块
      * */
     static async build(buildList = []) {
-        AutoBuild.allowBuild(buildList)
+        BiLink.allowBuild(buildList)
         await self.genModuleConfig()
         const allModuleNameList /* 原名包含大小写的所有模块列表 */ = Object.keys(self.allModuleConfig)
         if (buildList.length === 0) buildList = allModuleNameList  // 为空则全部编译
@@ -52,7 +54,7 @@ const self = class AutoBuild {
                 build: {
                     emptyOutDir: true,
                     outDir: `dist/${moduleName}/${moduleInfo.version}`,
-                }
+                },
             }
             if (moduleInfo.moduleType === 'normal') {  /* 普通打包模式 */
                 // 有指定rollupOptions.input lib会被忽略
@@ -88,10 +90,14 @@ const self = class AutoBuild {
             buildConfig /* 最终合并外部微模块专属的vite配置 */ = deepMerge(buildConfig, moduleInfo)
 
             /* 下面是拿到终配置的逻辑  */
+            if (!Array.isArray(buildConfig.plugins)){
+                buildConfig.plugins = []
+            }
             if (moduleInfo.moduleType === 'normal') {
                 //  添加处理normal下html位置的插件
-                if (Array.isArray(buildConfig.plugins)) buildConfig.plugins.push(moveIndexHtmlToRootPlugin(buildConfig))
+                buildConfig.plugins.push(moveIndexHtmlToRootPlugin(buildConfig))
             }
+            /* 添加插件完成  */
 
             // console.log(buildConfig.plugins);
             // console.log(buildConfig);
@@ -115,18 +121,21 @@ const self = class AutoBuild {
      * @param {Boolean} [option.runServe = true]  是否启动服务器
      * */
     static async serve(moduleName, isPreview = false, option = {syncModuleConfig: true, runServe: true}) {
+        const serverBegin=Date.now()
         if (option.syncModuleConfig !== false) await self.genModuleConfig()
         if (option.runServe === false) return
         if (!moduleName) throw new Error('未找到指定模块')
         const baseSrc = path.resolve(process.cwd(), `src/${self.moduleDir}/${moduleName}/`)
-        let customViteConfig = self.allModuleConfig[moduleName]
+        let customViteConfig = self.allModuleConfig[moduleName] || self.allModuleConfig[moduleName.toLowerCase()]
         if (!customViteConfig) throw '未找到模块' + moduleName + '指定的vite配置信息'
 
         let viteConfig = deepMerge({
             server: {
+                hmr: true,
                 host: '0.0.0.0',
             },
-            configFile: false,
+            // configFile:false,
+            // envFile:true,
             root: baseSrc,
         }, customViteConfig)
         // console.log(viteConfig);
@@ -142,6 +151,11 @@ const self = class AutoBuild {
                 }
             })
         }
+        /*  添加插件  */
+        if (!Array.isArray(viteConfig.plugins)) viteConfig.plugins = []
+        viteConfig.plugins.push(preact())
+
+        // console.log(viteConfig);
         let server = {}
         if (isPreview) /* preview */ server = await preview(viteConfig)
         else {
@@ -149,7 +163,12 @@ const self = class AutoBuild {
             server = await createServer(viteConfig)
             await server.listen()
         }
+        const serverEnd= Date.now();
+        const serveTime=(serverEnd-serverBegin)+" ms"
+        console.clear()
+        console.log(`\n\n     BI-LINK v${self.version} ready in ${serveTime}\n`)
         server.printUrls()
+        // console.log(server.config);
     }
 
     /** 获取所有的模块配置信息，包括:模块路径, build.json等 */

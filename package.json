@@ -1,6 +1,6 @@
 {
   "name": "bilink-cli",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "type": "module",
   "description": "bilink-cli",
   "main": "index.js",
@@ -24,6 +24,8 @@
     "bilink": "./bin/bilink.js"
   },
   "dependencies": {
+    "@preact/preset-vite": "^2.5.0",
+    "preact": "^10.13.0",
     "commander": "^10.0.0",
     "fs-extra": "^11.1.0",
     "glob": "^8.1.0",
@@ -36,6 +38,7 @@
     "@vitejs/plugin-vue": "^4.0.0",
     "terser": "^5.16.5",
     "vite": "^4.1.4",
+    "vite-plugin-react-refresh": "^1.0.0",
     "vue": "^3.2.47"
   }
 }

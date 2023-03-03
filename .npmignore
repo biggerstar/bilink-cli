@@ -3,3 +3,7 @@ src
 units
 index.js
 dist
+.idea
+vite.config.js
+yarn-error.log
+yarn.lock

@@ -30,3 +30,7 @@ yarn add bilink-cli
   original configuration of vite. Developers can override the original vite configuration by customizing this file
   configuration and take effect on the micro modules in the same folder
 
+####  Build
+
+***
+-To compile into a usable bin script, you must use `npm run vite:build`

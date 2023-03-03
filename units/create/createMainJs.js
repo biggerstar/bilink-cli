@@ -1,7 +1,7 @@
-export default function createMainJs(res) {
+export default function createMainJs() {
     return `import {createApp} from 'vue'
-import ${res.camelName} from './${res.camelName}.vue'
-const app = createApp(${res.camelName})
+import App from './App.vue'
+const app = createApp(App)
 app.mount('#app')`
 
 }
