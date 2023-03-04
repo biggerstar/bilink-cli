@@ -1,14 +1,14 @@
 import fs from 'fs';
 import path from "path";
 import glob from "glob";
-import requireCjs from "./outher/require.js";
-import mkdirRecursive from "./outher/mkdirRecursive.js";
-import moveIndexHtmlToRootPlugin from './plugins/moveIndexHtmlToRoot.js'
-import getBuildOutDir from "./outher/getBuildOutDir.js";
-import {__dirname}from './outher/getNodeEnvDefineVar.js'
+import requireCjs from "./units/outher/require.js";
+import mkdirRecursive from "./units/outher/mkdirRecursive.js";
+import moveIndexHtmlToRootPlugin from './units/plugins/moveIndexHtmlToRoot.js'
+import getBuildOutDir from "./units/outher/getBuildOutDir.js";
+import {__dirname}from './units/outher/getNodeEnvDefineVar.js'
 
 const {build, createServer, preview} = requireCjs("vite")
-import deepMerge from "./outher/deepMerge.js";
+import deepMerge from "./units/outher/deepMerge.js";
 // import basicSsl from '@vitejs/plugin-basic-ssl'
 
 const self = class BiLink {
@@ -54,6 +54,11 @@ const self = class BiLink {
       let buildConfig = {  /* 基本配置 */
         mode: 'production',
         plugins: [],
+        define : {
+          'process.env':{
+            'NODE_ENV':'production'
+          }
+        },
         build: {
           emptyOutDir: true,
           outDir: moduleInfo.outDir,
@@ -83,7 +88,7 @@ const self = class BiLink {
             lib: {
               entry: path.resolve(process.cwd(), `src/${self.moduleDir}/${moduleName}/index.js`),
               name: moduleName,
-              formats: ['es'],/* formats 必须是数组,不然外部没开lib会报[].map not a function错误 */
+              formats: ['umd'],/* formats 必须是数组,不然外部没开lib会报[].map not a function错误 */
               fileName: moduleName,
             }
           }
@@ -137,11 +142,12 @@ const self = class BiLink {
     }, customViteConfig)
     // console.log(viteConfig);
     if (viteConfig?.server?.https === true) {   //  自动添加本地证书进行https的加密
+      console.log(__dirname);
       viteConfig = deepMerge(viteConfig, {
         server: {
           https: {
-            key: fs.readFileSync(path.resolve(__dirname, './../keys/localhost+1-key.pem')),
-            cert: fs.readFileSync(path.resolve(__dirname, './../keys/localhost+1.pem'))
+            key: fs.readFileSync(path.resolve(__dirname, '../keys/localhost+1-key.pem')),
+            cert: fs.readFileSync(path.resolve(__dirname, '../keys/localhost+1.pem'))
           },
         }
       })

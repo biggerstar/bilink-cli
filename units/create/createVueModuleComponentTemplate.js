@@ -1,6 +1,8 @@
 export default function createVueModuleComponentTemplate(res) {
     return `<template>
-  <div> Hello Bi-Link</div>
+  <div>
+    <div> Hello Bi-Link</div>
+  </div>
 </template>
 
 <script setup>
