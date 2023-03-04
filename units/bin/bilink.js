@@ -2,12 +2,11 @@
 import {Command} from 'commander'
 import fs from "fs"
 import path from "path"
-import {fileURLToPath} from 'url';
-
+import {__dirname}from '../outher/getNodeEnvDefineVar.js'
 import lodash from "lodash"
 import BiLink from "../BiLink.js"
 import createEvery from "../create/index.js";
-import existModule from "../existModule.js";
+import existModule from "../outher/existModule.js";
 import prompts from "../prompts/index.js";
 
 async function biLinkCreate(str, options) {
@@ -70,8 +69,6 @@ async function biLinkPreview(str, options) {
 
 
 function parseCli() {
-  const __filename = fileURLToPath(import.meta.url)
-  const __dirname = path.dirname(__filename)
   let packageConfig = null
   try {
     packageConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname, './../package.json'), 'utf8'))

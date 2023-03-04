@@ -1,5 +1,5 @@
 import inquirer from "inquirer";
-import existModule from "../existModule.js";
+import existModule from "../outher/existModule.js";
 
 const prompts = {
     create() {

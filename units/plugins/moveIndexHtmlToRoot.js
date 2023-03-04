@@ -1,7 +1,7 @@
 import glob from "glob";
 import fse from "fs-extra";
 import fs from "fs";
-import getBuildOutDir from "../getBuildOutDir.js";
+import getBuildOutDir from "../outher/getBuildOutDir.js";
 
 const replaceHtmlUrl = (code) => {
   const scriptReg = /<script.+src\s*=\s*["|']\s*(\.?\/.+)\s*["|'].+<\/script>/

@@ -1,6 +1,6 @@
 {
   "name": "bilink-cli",
-  "version": "0.0.15",
+  "version": "0.0.19",
   "type": "module",
   "description": "bilink-cli",
   "main": "index.js",
@@ -9,10 +9,10 @@
     "cli": "node ./bin/bilink.js",
     "create": "bilink create",
     "build": "bilink build",
-    "vite:build": "vite build && node units/addBinHeader.js",
+    "vite:build": "vite build && node units/outher/addBinHeader.js",
     "release": "npm publish && git commit -am $npm_package_version && git tag $npm_package_version && git push --tags ",
-    "release:git": "git commit -am $npm_package_version && git tag $npm_package_version && git push --tags ",
-    "release:npm": "npm publish"
+    "release:npm": "npm publish",
+    "release:git": "git commit -am $npm_package_version && git tag $npm_package_version && git push --tags "
   },
   "exports": {
     "default": "./bin/bilink.js",

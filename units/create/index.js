@@ -4,8 +4,8 @@ import createViteConfigJs from "./createViteConfigJs.js";
 import createAppTemplate from "./createAppTemplate.js";
 import createVueModuleComponentTemplate from './createVueModuleComponentTemplate.js'
 import createLibraryModeIndex from "./createLibraryModeIndex.js";
-import writeFileSync from "../writeFileSync.js";
-import mkdirRecursive from "../mkdirRecursive.js";
+import writeFileSync from "../outher/writeFileSync.js";
+import mkdirRecursive from "../outher/mkdirRecursive.js";
 
 export default function createEvery(res = {}) {
     // console.log(res);

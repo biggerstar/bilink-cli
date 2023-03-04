@@ -1,13 +1,14 @@
 import fs from 'fs';
 import path from "path";
 import glob from "glob";
-import requireCjs from "./require.js";
-import mkdirRecursive from "./mkdirRecursive.js";
+import requireCjs from "./outher/require.js";
+import mkdirRecursive from "./outher/mkdirRecursive.js";
 import moveIndexHtmlToRootPlugin from './plugins/moveIndexHtmlToRoot.js'
-import getBuildOutDir from "./getBuildOutDir.js";
+import getBuildOutDir from "./outher/getBuildOutDir.js";
+import {__dirname}from './outher/getNodeEnvDefineVar.js'
 
 const {build, createServer, preview} = requireCjs("vite")
-import deepMerge from "./deepMerge.js";
+import deepMerge from "./outher/deepMerge.js";
 // import basicSsl from '@vitejs/plugin-basic-ssl'
 
 const self = class BiLink {
@@ -139,8 +140,8 @@ const self = class BiLink {
       viteConfig = deepMerge(viteConfig, {
         server: {
           https: {
-            key: fs.readFileSync(path.resolve(process.cwd(), './keys/localhost+1-key.pem')),
-            cert: fs.readFileSync(path.resolve(process.cwd(), './keys/localhost+1.pem'))
+            key: fs.readFileSync(path.resolve(__dirname, './../keys/localhost+1-key.pem')),
+            cert: fs.readFileSync(path.resolve(__dirname, './../keys/localhost+1.pem'))
           },
         }
       })
