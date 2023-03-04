@@ -27,6 +27,7 @@ export default defineConfig(({mode,command}) => {
                 },
                 external: [
                     'fs',
+                    'url',
                     'fs-extra',
                     'glob',
                     'path',
