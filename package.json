@@ -1,6 +1,6 @@
 {
   "name": "bilink-cli",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "type": "module",
   "description": "bilink-cli",
   "main": "index.js",

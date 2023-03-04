@@ -1,4 +1,4 @@
-import AutoBuild from "./units/AutoBuild.js";
+import BiLink from "./units/BiLink.js";
 
-export const bilink = () => AutoBuild.createVitePlugin
-export default AutoBuild
+export const bilink = () => BiLink.createVitePlugin
+export default BiLink
