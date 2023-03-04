@@ -4,7 +4,7 @@ import fs from "fs"
 import path from "path"
 import {__dirname}from '../outher/getNodeEnvDefineVar.js'
 import lodash from "lodash"
-import BiLink from "../BiLink.js"
+import BiLink from "../../BiLink.js"
 import createEvery from "../create/index.js";
 import existModule from "../outher/existModule.js";
 import prompts from "../prompts/index.js";
