@@ -2,6 +2,8 @@
 import {Command} from 'commander'
 import fs from "fs"
 import path from "path"
+import {fileURLToPath} from 'url';
+
 import lodash from "lodash"
 import BiLink from "../BiLink.js"
 import createEvery from "../create/index.js";
@@ -54,7 +56,7 @@ async function biLinkServe(str, options, isPreview = false) {
     await BiLink.serve(options.args[0], isPreview)
   } else {
     await BiLink.serve(options.args[0], isPreview, {syncModuleConfig: true, runServe: false})  // 为了获得allModuleConfig
-    const allModuleName = Object.keys(BiLink.allModuleConfig).map(name => name.toLowerCase())
+    const allModuleName = BiLink.allSourceModuleName
     if (allModuleName.length === 0) return console.log(' \u274C  Modules is empty'); // ❌
     await prompts.serveChoices(allModuleName).then(async (res) => {
       await BiLink.serve(res['serveName'], isPreview)
@@ -66,11 +68,10 @@ async function biLinkPreview(str, options) {
   await biLinkServe(str, options, true)
 }
 
-import {fileURLToPath} from 'url';
 
 function parseCli() {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
+  const __filename = fileURLToPath(import.meta.url)
+  const __dirname = path.dirname(__filename)
   let packageConfig = null
   try {
     packageConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname, './../package.json'), 'utf8'))
