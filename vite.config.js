@@ -41,7 +41,5 @@ export default defineConfig(({mode, command}) => {
       },
     }
   }
-
-
   return config
 })

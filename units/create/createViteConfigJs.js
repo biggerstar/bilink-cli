@@ -1,5 +1,5 @@
 export default function createViteConfigJs(res) {
-    const inputField = res.moduleType === 'normal' ? `    
+    const inputField = res.moduleType === 'normal' ? `
     /* 普通开发模式下，可以在input中修改打包入口 */
     //input : path.resolve(process.cwd(),'src/modules/${res.camelName}/index.html'),` : ''
 
@@ -11,6 +11,7 @@ export default {
   name: "${res.camelName}",
   version: "${res.version}",
   moduleType: "${res.moduleType}",
+  typeOutDir: "${res.moduleType}", // 默认编译输出分类文件夹
   plugins: [vue()],
   resolve: {
     alias: {

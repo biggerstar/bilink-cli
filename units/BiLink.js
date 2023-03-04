@@ -4,6 +4,7 @@ import glob from "glob";
 import requireCjs from "./require.js";
 import mkdirRecursive from "./mkdirRecursive.js";
 import moveIndexHtmlToRootPlugin from './plugins/moveIndexHtmlToRoot.js'
+import getBuildOutDir from "./getBuildOutDir.js";
 
 const {build, createServer, preview} = requireCjs("vite")
 import deepMerge from "./deepMerge.js";
@@ -47,13 +48,14 @@ const self = class BiLink {
       const moduleInfo = self.allModuleConfig[buildList[i].toLowerCase()]
       if (!moduleInfo) throw `未找到微模块: ${buildList[i]}对应的配置信息`
       const moduleName = moduleInfo.name || buildList[i]
+      moduleInfo.outDir = getBuildOutDir(moduleInfo)
       /* 开始生成初始的vite配置 */
       let buildConfig = {  /* 基本配置 */
         mode: 'production',
         plugins: [],
         build: {
           emptyOutDir: true,
-          outDir: `dist/${moduleName}/${moduleInfo.version}`,
+          outDir: moduleInfo.outDir,
         },
       }
       if (moduleInfo.moduleType === 'normal') {  /* 普通打包模式 */
@@ -92,9 +94,9 @@ const self = class BiLink {
       /* 下面是拿到终配置的逻辑  */
       if (moduleInfo.moduleType === 'normal') {
         //  添加处理normal下html位置的插件
-        buildConfig.plugins.push(moveIndexHtmlToRootPlugin(buildConfig))
+        // console.log(buildConfig);
+        buildConfig.plugins.push(moveIndexHtmlToRootPlugin(moduleInfo))
       }
-
       // console.log(buildConfig);
       const sourceLog = console.log
       console.log = (...args) => {  /* 拦截控制台输出内容，并在后面归还*/  /* u2795 */
@@ -130,7 +132,7 @@ const self = class BiLink {
         host: '0.0.0.0',
       },
       // envFile:true,
-      root: baseSrc,  /* 要实现热更新必须moduleName和实例模块目录名一致 */
+      root: baseSrc,  /* 要实现热更新必须moduleName和实例模块目录名一致,！！否则热更新不会生效 */
     }, customViteConfig)
     // console.log(viteConfig);
     if (viteConfig?.server?.https === true) {   //  自动添加本地证书进行https的加密
